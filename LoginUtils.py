@@ -11,9 +11,9 @@ import info
 
 
 def create_cookie():
-    cookie = http.cookiejar.MozillaCookieJar()
+    cookie = http.cookiejar.MozillaCookieJar(Config.cookie_file_name)
     try:
-        cookie.load(Config.cookie_file_name)
+        cookie.load()
     except FileNotFoundError:
         pass
     return cookie
@@ -33,13 +33,6 @@ def get_site():
     return choice
 
 
-def get_available_classes(cookie):
-    opener = get_opener(cookie)
-    opener.open(Config.show_class_api)
-    # TODO
-    pass
-
-
 def get_opener(cookie):
     return urllib.request.build_opener(urllib.request.HTTPCookieProcessor(cookie))
 
@@ -55,6 +48,7 @@ class LoginUtils:
         tmp = io.BytesIO(file.read())
         img = Image.open(tmp)
         img.show()
+        self.cookie.save(Config.cookie_file_name)
         return self.cookie
 
     def get_validation_code(self):
@@ -62,7 +56,9 @@ class LoginUtils:
         return input('请输入验证码:')
 
     def login(self):
-        print('登录：')
+        if self.cookie.cookies.__len__() > 0:
+            return self.cookie
+        print('登录\n')
         while 1:
             username = input('用户名：')
             password = input('密码：')

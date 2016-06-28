@@ -5,28 +5,58 @@ import urllib.parse
 
 import time
 
+import Config
+import info
+import LoginUtils
 
-def get_classes():
-    #TODO
-    return []
+
+# http://xk2.cqupt.edu.cn/data/json-data.php?type=zyk
+
+def get_classes(url, cookie):
+    choice = info.choose_type()
+    url = url + Config.show_class_api + '?type='
+    if choice is '1':
+        url += 'zyk'
+    elif choice is '2':
+        url += 'rx'
+    opener = LoginUtils.get_opener(cookie)
+    response = opener.open(url)
+    result = json.JSONDecoder().decode(response.decode('utf8'))['data']
+    print(result)
+    return result
 
 
 class Classes:
     def __init__(self, url, cookie):
-        self.classes = get_classes()
+        self.classes = []
         self.url = url
         self.cookie = cookie
 
-    def choose_class(self, cid):
+    def select(self, ticktock=3, count=-1):
+        self.classes.clear()
+        self.classes.append(get_classes(self.url, self.cookie))
+        choice = info.print_all(self.classes)
+        if choice is -1:
+            return
+        return self.choose_class(choice, count, ticktock)
+
+    def choose_class(self, cid, count, ticktock):
         target = self.classes[cid]
-        threading._start_new_thread(self.choose_class, target)
+        if count > -1:
+            return ChooseClass(target, self.url, ticktock, '抢课姬' + str(count), True)
+        else:
+            return ChooseClass(target, self.url, ticktock)
 
 
 class ChooseClass(threading.Thread):
-    def __init__(self, data, url):
+    def __init__(self, data, url, ticktock, name=None, female=False):
         super().__init__()
         self.data = data
         self.url = url
+        if name is not None:
+            self.name = name + super()._name
+        self.female = female
+        self.ticktock = ticktock
 
     def start(self):
         while 1:
@@ -38,10 +68,20 @@ class ChooseClass(threading.Thread):
                 response = response.read()
                 result = json.loads(response.decode('UTF8'))
                 if result['code'] == 0 or result['info'] == 'OK':
-                    print(str(time.strftime('%H:%M:%S', time.localtime(time.time()))) + "--->" + str(result))
+                    if self.female:
+                        print(str(time.strftime('%H:%M:%S', time.localtime(time.time()))) + " : " + '主人，主人，我抢到了！')
+                    else:
+                        print(str(time.strftime('%H:%M:%S', time.localtime(time.time()))) + " : " + str(result['info']))
                     break
                 else:
-                    print(str(time.strftime('%H:%M:%S', time.localtime(time.time()))) + "--->" + str(result))
-                    time.sleep(3)
+                    if self.female:
+                        print(str(time.strftime('%H:%M:%S', time.localtime(time.time()))) + " : " + '主人，人家抢不到嘛！')
+                    else:
+                        print(str(time.strftime('%H:%M:%S', time.localtime(time.time()))) + " : " + str(result['info']))
+                    time.sleep(self.ticktock)
             except:
-                print(str(time.strftime('%H:%M:%S', time.localtime(time.time()))) + "--->" + "ERROR!")
+                if self.female:
+                    print(str(time.strftime('%H:%M:%S', time.localtime(time.time()))) + " : " + '主人，人家出错了！')
+                else:
+                    print(str(time.strftime('%H:%M:%S', time.localtime(time.time()))) + " : " + "ERROR!")
+                time.sleep(self.ticktock)
