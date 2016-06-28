@@ -15,15 +15,19 @@ import LoginUtils
 def get_classes(url, cookie):
     choice = info.choose_type()
     url = url + Config.show_class_api + '?type='
-    if choice is '1':
+    if choice is 'e':
+        return -1
+    elif choice is '1':
         url += 'zyk'
-    elif choice is '2':
+    else:
         url += 'rx'
     opener = LoginUtils.get_opener(cookie)
     response = opener.open(url)
-    result = json.JSONDecoder().decode(response.decode('utf8'))['data']
-    print(result)
-    return result
+    result = json.JSONDecoder().decode(response.read().decode('utf8'))
+    data = result['data']
+    if data.__len__() is 0:
+        print(result['info'] + '\n')
+    return data
 
 
 class Classes:
@@ -34,7 +38,12 @@ class Classes:
 
     def select(self, ticktock=3, count=-1):
         self.classes.clear()
-        self.classes.append(get_classes(self.url, self.cookie))
+        result = get_classes(self.url, self.cookie)
+        if result is -1:
+            exit(0)
+        self.classes += result
+        if self.classes.__len__() is 0:
+            return
         choice = info.print_all(self.classes)
         if choice is -1:
             return
@@ -52,6 +61,8 @@ class ChooseClass(threading.Thread):
     def __init__(self, data, url, ticktock, name=None, female=False):
         super().__init__()
         self.data = data
+        self.data['isOver'] = 0
+        self.data['isTyfx'] = 0
         self.url = url
         if name is not None:
             self.name = name + super()._name
@@ -62,26 +73,26 @@ class ChooseClass(threading.Thread):
         while 1:
             try:
                 request = urllib.request.Request(self.url)
-                data = urllib.parse.urlencode(self.data)
-                data = data.encode(encoding='UTF8')
-                response = urllib.request.urlopen(request, data)
-                response = response.read()
-                result = json.loads(response.decode('UTF8'))
+                data = urllib.parse.urlencode(self.data).encode('utf8')
+                response = urllib.request.urlopen(request, data).response.read()
+                result = json.loads(response.decode('utf8'))
+                second = time.strftime('%H:%M:%S', time.localtime(time.time()))
                 if result['code'] == 0 or result['info'] == 'OK':
                     if self.female:
-                        print(str(time.strftime('%H:%M:%S', time.localtime(time.time()))) + " : " + '主人，主人，我抢到了！')
+                        print(second + " : " + '主人，主人，我抢到了！~\(≧▽≦)/~')
                     else:
-                        print(str(time.strftime('%H:%M:%S', time.localtime(time.time()))) + " : " + str(result['info']))
+                        print(second + " : " + str(result['info']))
                     break
                 else:
                     if self.female:
-                        print(str(time.strftime('%H:%M:%S', time.localtime(time.time()))) + " : " + '主人，人家抢不到嘛！')
+                        print(second + " : " + '主人，人家抢不到嘛！╮(╯▽╰)╭')
                     else:
-                        print(str(time.strftime('%H:%M:%S', time.localtime(time.time()))) + " : " + str(result['info']))
+                        print(second + " : " + str(result['info']))
                     time.sleep(self.ticktock)
-            except:
+            except Exception as e:
+                second = time.strftime('%H:%M:%S', time.localtime(time.time()))
                 if self.female:
-                    print(str(time.strftime('%H:%M:%S', time.localtime(time.time()))) + " : " + '主人，人家出错了！')
+                    print(second + " : " + '主人，人家出错了！╯﹏╰')
                 else:
-                    print(str(time.strftime('%H:%M:%S', time.localtime(time.time()))) + " : " + "ERROR!")
+                    print(second + " : " + str(e))
                 time.sleep(self.ticktock)

@@ -7,7 +7,6 @@ from PIL import Image
 import io
 
 import Config
-import info
 
 
 def create_cookie():
@@ -23,24 +22,18 @@ def choose_site(site=2):
     return 'http://xk' + str(site) + '.cqupt.edu.cn/'
 
 
-def get_site():
-    choice = info.choose_site()
-    if choice != '1' and choice != '2' and choice != '4':
-        print('使用默认')
-        choice = '2'
-    else:
-        print('使用选课' + choice)
-    return choice
+def get_opener1(url, content):
+    urllib.request.Request(url).add_unredirected_header('Cookie', 'PHPSESSID=' + content)
 
 
 def get_opener(cookie):
     return urllib.request.build_opener(urllib.request.HTTPCookieProcessor(cookie))
 
 
-class LoginUtils:
-    def __init__(self):
+class LoginUtil:
+    def __init__(self, url, cookie=None):
+        self.url = url
         self.cookie = create_cookie()
-        self.url = choose_site(get_site())
 
     def show_picture(self):
         opener = get_opener(self.cookie)
@@ -58,7 +51,7 @@ class LoginUtils:
     def login(self):
         if self.cookie.cookies.__len__() > 0:
             return self.cookie
-        print('登录\n')
+        print('登录')
         while 1:
             username = input('用户名：')
             password = input('密码：')
@@ -76,4 +69,3 @@ class LoginUtils:
                 self.cookie.save(Config.cookie_file_name)
                 return self.cookie
             print(result['info'])
-            print(self.cookie)
