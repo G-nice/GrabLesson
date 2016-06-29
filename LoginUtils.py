@@ -73,7 +73,6 @@ class LoginUtil:
 
     def login(self):
         if self.cookie.cookies.__len__() > 0:
-            print(self.cookie)
             return self.opener
         print('登录')
         while 1:
@@ -81,7 +80,6 @@ class LoginUtil:
             password = input('密码：')
             validation = self.get_validation_code()
             data = {'id': username, 'psw': password, 'vCode': validation}
-            print(data)
             data = urllib.parse.urlencode(data)
             data = data.encode('utf8')
             response = self.opener.get_opener().open(self.url + Config.login_api, data).read()
