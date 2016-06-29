@@ -3,12 +3,14 @@ def enter():
     print('欢迎来到抢课脚本（@CQUPT）v1.0')
     print('        作者：PinkD           ')
     print('-----------------------------')
-    print('')
+    print('如果出现身份过期，请删除当前目录下的cookie文件再试')
+    print('如果出现奇怪的bug，欢迎来issue')
+    print('github:https://github.com/78848d676612/')
 
 
 def input_cookie():
-    print('1.手动输入cookie（可使用WireShark抓包）')
-    print('2.登录自动获取cookie（需要安装库）')
+    print('1.手动输入cookie')
+    print('2.登录获取cookie(若已登录过，将自动跳过)')
     return input('请选择（默认2）：')
 
 
