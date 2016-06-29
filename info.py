@@ -50,6 +50,10 @@ def print_all(data): # TODO debug
         print(data[tmp]['nj'])  # 年级
         print(data[tmp]['kclb'])  # 课程类别
         print(data[tmp]['xf'])  # 学分
+        if data[tmp]['isOver'] is 1:
+            print('已满')
+        elif data[tmp]['isOver'] is 0:
+            print('未满')
         print('\n')
         position += 1
     print('tips:输入-1返回上一层\n')

@@ -12,7 +12,7 @@ import Config
 def create_cookie():
     cookie = http.cookiejar.MozillaCookieJar(Config.cookie_file_name)
     try:
-        cookie.load()
+        cookie.load(ignore_discard=True, ignore_expires=True)
     except FileNotFoundError:
         pass
     return cookie
@@ -22,26 +22,49 @@ def choose_site(site=2):
     return 'http://xk' + str(site) + '.cqupt.edu.cn/'
 
 
-def get_opener1(url, content):
-    urllib.request.Request(url).add_unredirected_header('Cookie', 'PHPSESSID=' + content)
+class CookieHandler(urllib.request.BaseHandler):
+    def __init__(self, cookie, cookiejar):
+        self.cookie = cookie
+        self.cookiejar = cookiejar
+
+    def http_request(self, request):
+        if not request.has_header('Cookie'):
+            request.add_unredirected_header('Cookie', self.cookie)
+            request.add_header('Cookie', self.cookie)
+        else:
+            cookie = request.get_header('Cookie')
+            request.add_unredirected_header('Cookie', cookie + '; ' + cookie)
+        self.cookiejar.add_cookie_header(request)
+        return request
+
+    def http_response(self, request, response):
+        self.cookiejar.extract_cookies(response, request)
+        self.cookiejar.save(ignore_discard=True, ignore_expires=True)
+        return response
 
 
-def get_opener(cookie):
-    return urllib.request.build_opener(urllib.request.HTTPCookieProcessor(cookie))
+class Opener:
+    def __init__(self, cookie, cookie_handler=None):
+        if cookie_handler:
+            self.opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(cookie), cookie_handler)
+        else:
+            self.opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(cookie))
+
+    def get_opener(self):
+        return self.opener
 
 
 class LoginUtil:
     def __init__(self, url, cookie=None):
         self.url = url
         self.cookie = create_cookie()
+        self.opener = Opener(self.cookie)
 
     def show_picture(self):
-        opener = get_opener(self.cookie)
-        file = opener.open(self.url + Config.picture_api)
-        tmp = io.BytesIO(file.read())
+        response = self.opener.get_opener().open(self.url + Config.picture_api)
+        tmp = io.BytesIO(response.read())
         img = Image.open(tmp)
         img.show()
-        self.cookie.save(Config.cookie_file_name)
         return self.cookie
 
     def get_validation_code(self):
@@ -50,7 +73,8 @@ class LoginUtil:
 
     def login(self):
         if self.cookie.cookies.__len__() > 0:
-            return self.cookie
+            print(self.cookie)
+            return self.opener
         print('登录')
         while 1:
             username = input('用户名：')
@@ -60,13 +84,10 @@ class LoginUtil:
             print(data)
             data = urllib.parse.urlencode(data)
             data = data.encode('utf8')
-            print(self.cookie)
-            opener = get_opener(self.cookie)
-            response = opener.open(self.url + Config.login_api, data)
-            response = response.read()
+            response = self.opener.get_opener().open(self.url + Config.login_api, data).read()
             result = json.loads(response.decode('UTF8'))
             if result['code'] == 0 or result['info'] == 'OK':
                 print('登陆成功')
-                self.cookie.save(Config.cookie_file_name)
-                return self.cookie
+                self.cookie.save(ignore_discard=True, ignore_expires=True)
+                return self.opener
             print(result['info'])
