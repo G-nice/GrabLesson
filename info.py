@@ -43,13 +43,13 @@ def print_all(data): # TODO debug
     position = 0
     for tmp in data:
         print('序号:' + str(position))
-        print(tmp['kcmc'])  # 课程名
-        print(tmp['teacher'])  # 老师
-        print(tmp['sdPrint'])  # 时间
-        print(tmp['kchType'])  # 课程类型
-        print(tmp['nj'])  # 年级
-        print(tmp['kclb'])  # 课程类别
-        print(tmp['xf'])  # 学分
+        print(data[tmp]['kcmc'])  # 课程名
+        print(data[tmp]['teacher'])  # 老师
+        print(data[tmp]['sdPrint'])  # 时间
+        print(data[tmp]['kchType'])  # 课程类型
+        print(data[tmp]['nj'])  # 年级
+        print(data[tmp]['kclb'])  # 课程类别
+        print(data[tmp]['xf'])  # 学分
         print('\n')
         position += 1
     print('tips:输入-1返回上一层\n')

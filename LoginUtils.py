@@ -66,6 +66,7 @@ class LoginUtil:
             response = response.read()
             result = json.loads(response.decode('UTF8'))
             if result['code'] == 0 or result['info'] == 'OK':
+                print('登陆成功')
                 self.cookie.save(Config.cookie_file_name)
                 return self.cookie
             print(result['info'])
